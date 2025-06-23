@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Speech-to-ESP32</title>
+  <script>
+    function SendData() {
+      const ip = "192.168.1.171"; // Replace with your ESP32's actual IP
+      const msg = encodeURIComponent(document.getElementById('msg').value);
+      fetch(`http://${ip}/&MSG=${msg}&nocache=${Math.random()}`)
+        .then(response => response.text())
+        .then(data => console.log("Message sent:", msg));
+    }
+
+    function startDictation() {
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        alert("Your browser does not support speech recognition.");
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const result = event.results[0][0].transcript;
+        document.getElementById('msg').value = result;
+        SendData();
+      };
+
+      recognition.onerror = function(event) {
+        alert("Speech recognition error: " + event.error);
+      };
+    }
+  </script>
+</head>
+<body>
+  <h3>Secure Speech UI for ESP32</h3>
+  <input type="text" id="msg" maxlength="255" placeholder="Your message...">
+  <br><br>
+  <button onclick="startDictation()">🎤 Speak</button>
+  <button onclick="SendData()">📤 Send</button>
+</body>
+</html>
