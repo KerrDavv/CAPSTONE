@@ -2,31 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Speech to ESP32 Display</title>
+  <title>Speech to ESP32 LED Matrix</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
-    input, button { padding: 10px; margin: 5px 0; font-size: 16px; }
-    button { cursor: pointer; }
+    body { font-family: sans-serif; background: #f9f9f9; padding: 20px; }
+    input, button { font-size: 16px; padding: 8px; margin: 6px 0; width: 100%; max-width: 400px; }
+    label { font-weight: bold; display: block; margin-top: 20px; }
+    .container { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
   </style>
   <script>
-    function SendData() {
-      const esp32_ip = "192.168.1.171"; // Replace with your actual ESP32 IP
-      const msg = encodeURIComponent(document.getElementById('msg').value.trim());
+    let esp32_ip = "";
 
-      if (!msg) {
-        alert("Please enter or speak a message first.");
-        return;
+    function setIP() {
+      const ipField = document.getElementById('ip');
+      esp32_ip = ipField.value.trim();
+      if (!esp32_ip) {
+        alert("Please enter a valid ESP32 IP address.");
+        return false;
       }
+      alert("ESP32 IP set to: " + esp32_ip);
+      return true;
+    }
+
+    function SendData() {
+      if (!esp32_ip && !setIP()) return;
+
+      const msg = encodeURIComponent(document.getElementById('msg').value.trim());
+      if (!msg) return alert("Please enter or speak a message.");
 
       fetch(`http://${esp32_ip}/&MSG=${msg}&nocache=${Math.random()}`)
         .then(response => response.text())
         .then(data => {
           console.log("Message sent:", msg);
-          alert("Message sent to ESP32!");
+          alert("✅ Message sent to ESP32!");
         })
         .catch(err => {
           console.error("Failed to send message:", err);
-          alert("Failed to connect to ESP32. Is it online?");
+          alert("❌ Failed to connect to ESP32. Check IP and Wi-Fi.");
         });
     }
 
@@ -57,9 +68,16 @@
   </script>
 </head>
 <body>
-  <h2>Speech-to-Text Web UI for ESP32</h2>
-  <input type="text" id="msg" placeholder="Type or speak a message..." maxlength="255"><br>
-  <button onclick="startDictation()">🎤 Speak</button>
-  <button onclick="SendData()">📤 Send</button>
+  <div class="container">
+    <h2>🗣️ Speech to ESP32 LED Matrix</h2>
+    <label for="ip">ESP32 IP Address</label>
+    <input type="text" id="ip" placeholder="e.g. 192.168.1.171">
+    <button onclick="setIP()">Set IP</button>
+
+    <label for="msg">Message</label>
+    <input type="text" id="msg" maxlength="255" placeholder="Type or speak a message...">
+    <button onclick="startDictation()">🎤 Speak</button>
+    <button onclick="SendData()">📤 Send</button>
+  </div>
 </body>
 </html>
