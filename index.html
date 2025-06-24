@@ -1,14 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Speech-to-ESP32</title>
+  <meta charset="UTF-8">
+  <title>Speech to ESP32 Display</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+    input, button { padding: 10px; margin: 5px 0; font-size: 16px; }
+    button { cursor: pointer; }
+  </style>
   <script>
     function SendData() {
-      const ip = "192.168.1.171"; // Replace with your ESP32's actual IP
-      const msg = encodeURIComponent(document.getElementById('msg').value);
-      fetch(`http://${ip}/&MSG=${msg}&nocache=${Math.random()}`)
+      const esp32_ip = "192.168.1.171"; // Replace with your actual ESP32 IP
+      const msg = encodeURIComponent(document.getElementById('msg').value.trim());
+
+      if (!msg) {
+        alert("Please enter or speak a message first.");
+        return;
+      }
+
+      fetch(`http://${esp32_ip}/&MSG=${msg}&nocache=${Math.random()}`)
         .then(response => response.text())
-        .then(data => console.log("Message sent:", msg));
+        .then(data => {
+          console.log("Message sent:", msg);
+          alert("Message sent to ESP32!");
+        })
+        .catch(err => {
+          console.error("Failed to send message:", err);
+          alert("Failed to connect to ESP32. Is it online?");
+        });
     }
 
     function startDictation() {
@@ -26,8 +45,8 @@
       recognition.start();
 
       recognition.onresult = function(event) {
-        const result = event.results[0][0].transcript;
-        document.getElementById('msg').value = result;
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('msg').value = transcript;
         SendData();
       };
 
@@ -38,9 +57,8 @@
   </script>
 </head>
 <body>
-  <h3>Secure Speech UI for ESP32</h3>
-  <input type="text" id="msg" maxlength="255" placeholder="Your message...">
-  <br><br>
+  <h2>Speech-to-Text Web UI for ESP32</h2>
+  <input type="text" id="msg" placeholder="Type or speak a message..." maxlength="255"><br>
   <button onclick="startDictation()">🎤 Speak</button>
   <button onclick="SendData()">📤 Send</button>
 </body>
